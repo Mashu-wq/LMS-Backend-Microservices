@@ -28,6 +28,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lms.authservice.domain.model.OutboxEvent;
+import com.lms.authservice.domain.repository.OutboxRepository;
 
 /**
  * Auth Application Service — orchestrates the core use cases.
@@ -49,23 +52,29 @@ public class AuthApplicationService {
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     // Metrics
     private final Counter registrationCounter;
     private final Counter loginSuccessCounter;
     private final Counter loginFailureCounter;
 
-    public AuthApplicationService(UserRepository userRepository,
+    public AuthApplicationService( UserRepository userRepository,
                                    RefreshTokenRepository refreshTokenRepository,
                                    TokenService tokenService,
                                    PasswordEncoder passwordEncoder,
                                    EventPublisher eventPublisher,
+                                   OutboxRepository outboxRepository,
+                                   ObjectMapper objectMapper,
                                    MeterRegistry meterRegistry) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
 
         this.registrationCounter = Counter.builder("auth.registrations.total")
                 .description("Total user registrations")
@@ -109,7 +118,23 @@ public class AuthApplicationService {
                 savedUser.getLastName(),
                 savedUser.getRole().name()
         );
-        eventPublisher.publishUserRegistered(event);
+
+        try {
+
+            String payload = objectMapper.writeValueAsString(event);
+
+            OutboxEvent outboxEvent = OutboxEvent.create(
+                    "User",
+                    savedUser.getId(),
+                    "UserRegisteredEvent",
+                    payload
+            );
+
+            outboxRepository.save(outboxEvent);
+
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to serialize event", e);
+        }
 
         registrationCounter.increment();
         log.info("User registered successfully userId={} role={}", savedUser.getId(), savedUser.getRole());
