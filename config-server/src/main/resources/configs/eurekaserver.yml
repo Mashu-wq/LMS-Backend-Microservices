@@ -1,0 +1,22 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eurekaserver
+
+eureka:
+  instance:
+    hostname: eurekaserver
+  client:
+    # Eureka server does not register itself
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://eurekaserver:8761/eureka/
+  server:
+    # Disable self-preservation in dev (enable in production)
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+    renewal-threshold-update-interval-ms: 15000
+    peer-eureka-nodes-update-interval-ms: 15000

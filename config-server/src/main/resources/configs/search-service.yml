@@ -1,0 +1,74 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: search-service
+
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USERNAME:lms_user}:${MONGO_PASSWORD:lms_password}@${MONGO_HOST:mongodb}:${MONGO_PORT:27017}/lms_search?authSource=admin
+      auto-index-creation: false
+
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 120000    # 2 minutes default (overridden per cache in CacheConfig)
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:lms_user}
+    password: ${RABBITMQ_PASSWORD:lms_password}
+    virtual-host: /lms
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 5
+        default-requeue-rejected: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-admin:eureka-secret@${EUREKA_HOST:eurekaserver}:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+
+search:
+  max-results: 50
+  default-page-size: 20
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: search-service
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+logging:
+  level:
+    com.lms: DEBUG
+    org.springframework.data.mongodb: INFO
+
+loki:
+  url: http://${LOKI_HOST:loki}:3100

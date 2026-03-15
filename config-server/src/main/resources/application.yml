@@ -1,0 +1,49 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        # Native profile: reads config from classpath (for local dev without a git repo)
+        # Switch to 'git' profile in production
+        native:
+          search-locations: classpath:/configs
+        git:
+          # Production: point to your private git repo
+          # uri: https://github.com/your-org/lms-config-repo
+          # default-label: main
+          # clone-on-start: true
+          # force-pull: true
+  profiles:
+    active: native  # Use 'git' in production
+  # Protect config server endpoints
+  security:
+    user:
+      name: ${CONFIG_SERVER_USERNAME:config-admin}
+      password: ${CONFIG_SERVER_PASSWORD:config-secret}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,refresh,busrefresh
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  level:
+    com.lms: DEBUG
+    org.springframework.cloud.config: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"

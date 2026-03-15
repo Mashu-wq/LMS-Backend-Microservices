@@ -1,0 +1,47 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: course-service
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USERNAME:lms_user}:${MONGO_PASSWORD:lms_password}@${MONGO_HOST:mongodb}:${MONGO_PORT:27017}/lms_courses?authSource=admin
+      auto-index-creation: false  # Managed via InitializingBean for production control
+
+  # Redis for caching course catalog
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes
+
+  # RabbitMQ for publishing events
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:lms_user}
+    password: ${RABBITMQ_PASSWORD:lms_password}
+    virtual-host: /lms
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eurekaserver:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+
+# Storage for course media (S3-compatible)
+storage:
+  s3:
+    bucket: ${S3_BUCKET:lms-course-media}
+    region: ${AWS_REGION:us-east-1}
+    endpoint: ${S3_ENDPOINT:}  # Override for MinIO in local env
