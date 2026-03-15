@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Payment Failed</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+           background: #f5f5f5; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #ffffff;
+                 border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .header { background: #dc2626; padding: 32px 40px; text-align: center; }
+    .header h1 { color: #ffffff; margin: 0; font-size: 24px; }
+    .body { padding: 40px; }
+    .body h2 { color: #1f2937; margin-top: 0; }
+    .body p { color: #4b5563; line-height: 1.6; }
+    .alert { background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px;
+             padding: 16px 20px; margin: 20px 0; color: #991b1b; }
+    .details { background: #f9fafb; border: 1px solid #e5e7eb;
+               border-radius: 6px; padding: 20px; margin: 20px 0; }
+    .footer { background: #f9fafb; padding: 24px 40px; text-align: center;
+              font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>✕ Payment Failed</h1>
+  </div>
+  <div class="body">
+    <h2>We couldn't process your payment</h2>
+
+    <div class="alert">
+      <strong>Reason:</strong> <span th:text="${failureReason}">Card declined</span>
+    </div>
+
+    <div class="details">
+      <p style="margin:0 0 8px 0;"><strong>Course:</strong> <span th:text="${courseName}">Course Title</span></p>
+      <p style="margin:0 0 8px 0;"><strong>Amount:</strong>
+        <span th:text="${currency + ' ' + #numbers.formatDecimal(amount, 1, 2)}">USD 49.99</span></p>
+      <p style="margin:0;"><strong>Attempted:</strong>
+        <span th:text="${#temporals.format(attemptDate, 'dd MMM yyyy HH:mm')}">01 Jan 2024</span></p>
+    </div>
+
+    <p>Common reasons for payment failure:</p>
+    <ul>
+      <li>Insufficient funds</li>
+      <li>Card details entered incorrectly</li>
+      <li>Card issuer declined the transaction</li>
+    </ul>
+    <p>Please retry your purchase with a different payment method or contact your bank for assistance.</p>
+  </div>
+  <div class="footer">
+    <p>© 2024 LMS Platform · No charge was applied to your account.</p>
+  </div>
+</div>
+</body>
+</html>

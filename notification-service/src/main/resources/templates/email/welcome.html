@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome to LMS Platform</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+           background: #f5f5f5; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #ffffff;
+                 border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .header { background: #4f46e5; padding: 32px 40px; text-align: center; }
+    .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; }
+    .body { padding: 40px; }
+    .body h2 { color: #1f2937; margin-top: 0; }
+    .body p { color: #4b5563; line-height: 1.6; }
+    .btn { display: inline-block; background: #4f46e5; color: #ffffff; padding: 14px 32px;
+           border-radius: 6px; text-decoration: none; font-weight: 600; margin: 24px 0; }
+    .footer { background: #f9fafb; padding: 24px 40px; text-align: center;
+              font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>LMS Platform</h1>
+  </div>
+  <div class="body">
+    <h2>Welcome, <span th:text="${firstName}">Student</span>!</h2>
+    <p>
+      Your account has been created successfully. You can now browse our course catalog,
+      enrol in courses, and start learning at your own pace.
+    </p>
+    <p>Here's a quick overview of what you can do:</p>
+    <ul>
+      <li>Browse hundreds of courses across multiple categories</li>
+      <li>Track your learning progress in real time</li>
+      <li>Earn certificates upon course completion</li>
+    </ul>
+    <p>Your registered email: <strong th:text="${email}">user@example.com</strong></p>
+    <p>Your role: <strong th:text="${role}">STUDENT</strong></p>
+  </div>
+  <div class="footer">
+    <p>© 2024 LMS Platform. You're receiving this because you created an account.</p>
+  </div>
+</div>
+</body>
+</html>
