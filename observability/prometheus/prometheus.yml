@@ -1,0 +1,76 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: lms-local
+    env: development
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []  # Add alertmanager:9093 when deploying
+
+# Alert rules
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: prometheus
+    static_configs:
+      - targets: [ "localhost:9090" ]
+
+  # Config Server
+  - job_name: config-server
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "config-server:8888" ]
+
+  # Eureka Server
+  - job_name: eurekaserver
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "eurekaserver:8761" ]
+
+  # Gateway Server
+  - job_name: gatewayserver
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "gatewayserver:8080" ]
+
+  # Microservices
+  - job_name: auth-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "auth-service:9000" ]
+
+  - job_name: user-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "user-service:8081" ]
+
+  - job_name: course-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "course-service:8082" ]
+
+  - job_name: progress-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "progress-service:8083" ]
+
+  - job_name: payment-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "payment-service:8084" ]
+
+  - job_name: notification-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "notification-service:8085" ]
+
+  - job_name: search-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "search-service:8086" ]
