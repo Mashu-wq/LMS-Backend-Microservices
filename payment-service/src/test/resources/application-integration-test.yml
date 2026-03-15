@@ -1,0 +1,38 @@
+# Integration test overrides — Testcontainers supplies actual DB URL via @DynamicPropertySource
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # Disable config server import in tests
+  cloud:
+    config:
+      enabled: false
+
+  # Disable Redis — use no-op cache
+  cache:
+    type: none
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Tests inject mock JWTs via SecurityMockMvcRequestPostProcessors.jwt()
+          # so no real JWKS endpoint is needed.
+          jwk-set-uri: http://localhost:9999/noop
+
+payment:
+  gateway:
+    simulate-failure-rate: 0.0
+    processing-delay-ms: 0
+
+eureka:
+  client:
+    enabled: false
+
+management:
+  tracing:
+    enabled: false
