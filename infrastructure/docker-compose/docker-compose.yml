@@ -1,0 +1,453 @@
+
+
+# ============================================================
+# LMS Platform — Local Development Docker Compose
+# ============================================================
+# Start order (use profiles to bring up incrementally):
+#   1. docker compose --profile infra up -d        (databases, messaging)
+#   2. docker compose --profile platform up -d     (config, eureka, gateway)
+#   3. docker compose --profile services up -d     (all microservices)
+#   4. docker compose --profile observability up -d (prometheus, grafana, etc.)
+# ============================================================
+
+networks:
+  lms-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  rabbitmq-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+  tempo-data:
+
+services:
+
+  # ──────────────────────────────────────────────────────────
+  # INFRASTRUCTURE — databases, cache, messaging
+  # ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: [ "infra", "platform", "services", "all" ]
+    container_name: lms-postgres
+    environment:
+      POSTGRES_USER: lms_user
+      POSTGRES_PASSWORD: lms_password
+      POSTGRES_MULTIPLE_DATABASES: lms_auth,lms_users,lms_progress,lms_payments
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "5432:5432"
+    networks:
+      - lms-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U lms_user" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7.0
+    profiles: [ "infra", "platform", "services", "all" ]
+    container_name: lms-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lms_user
+      MONGO_INITDB_ROOT_PASSWORD: lms_password
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - lms-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    profiles: [ "infra", "platform", "services", "all" ]
+    container_name: lms-redis
+    command: redis-server --appendonly yes --requirepass ""
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - lms-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    profiles: [ "infra", "platform", "services", "all" ]
+    container_name: lms-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: lms_user
+      RABBITMQ_DEFAULT_PASS: lms_password
+      RABBITMQ_DEFAULT_VHOST: /lms
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    networks:
+      - lms-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MailHog — local SMTP server for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    profiles: [ "infra", "services", "all" ]
+    container_name: lms-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - lms-network
+
+  # ──────────────────────────────────────────────────────────
+  # PLATFORM — config, discovery, gateway
+  # ──────────────────────────────────────────────────────────
+
+  config-server:
+    image: zer008/config-server:latest
+    profiles: [ "platform", "services", "all" ]
+    container_name: lms-config-server
+    build:
+      context: ../../config-server
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+    ports:
+      - "8888:8888"
+    networks:
+      - lms-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  eurekaserver:
+    image: zer008/eurekaserver:latest
+    profiles: [ "platform", "services", "all" ]
+    container_name: lms-eureka
+    build:
+      context: ../../eurekaserver
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_USERNAME: eureka-admin
+      EUREKA_PASSWORD: eureka-secret
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - lms-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gatewayserver:
+    image: zer008/gatewayserver:latest
+    profiles: [ "platform", "services", "all" ]
+    container_name: lms-gateway
+    build:
+      context: ../../gatewayserver
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      REDIS_HOST: redis
+    ports:
+      - "8080:8080"
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  # ──────────────────────────────────────────────────────────
+  # MICROSERVICES
+  # ──────────────────────────────────────────────────────────
+
+  auth-service:
+    image: zer008/auth-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-auth-service
+    build:
+      context: ../../auth-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      DB_HOST: postgres
+      DB_USERNAME: lms_user
+      DB_PASSWORD: lms_password
+      JWT_SECRET: ${JWT_SECRET:-bXlTdXBlclNlY3JldEtleUZvckxNU1BsYXRmb3JtMjAyNA==}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  user-service:
+    image: zer008/user-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-user-service
+    build:
+      context: ../../user-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      DB_HOST: postgres
+      DB_USERNAME: lms_user
+      DB_PASSWORD: lms_password
+      REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  course-service:
+    image: zer008/course-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-course-service
+    build:
+      context: ../../course-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      MONGO_HOST: mongodb
+      MONGO_USERNAME: lms_user
+      MONGO_PASSWORD: lms_password
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  progress-service:
+    image: zer008/progress-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-progress-service
+    build:
+      context: ../../progress-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      DB_HOST: postgres
+      DB_USERNAME: lms_user
+      DB_PASSWORD: lms_password
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  payment-service:
+    image: zer008/payment-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-payment-service
+    build:
+      context: ../../payment-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      DB_HOST: postgres
+      DB_USERNAME: lms_user
+      DB_PASSWORD: lms_password
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  notification-service:
+    image: zer008/notification-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-notification-service
+    build:
+      context: ../../notification-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
+      MAIL_HOST: mailhog
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  search-service:
+    image: zer008/search-service:latest
+    profiles: [ "services", "all" ]
+    container_name: lms-search-service
+    build:
+      context: ../../search-service
+      dockerfile: Dockerfile
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      CONFIG_SERVER_USERNAME: config-admin
+      CONFIG_SERVER_PASSWORD: config-secret
+      MONGO_HOST: mongodb
+      MONGO_USERNAME: lms_user
+      MONGO_PASSWORD: lms_password
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+  # ──────────────────────────────────────────────────────────
+  # OBSERVABILITY STACK
+  # ──────────────────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    profiles: [ "observability", "all" ]
+    container_name: lms-prometheus
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../observability/prometheus/rules:/etc/prometheus/rules
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    ports:
+      - "9090:9090"
+    networks:
+      - lms-network
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    profiles: [ "observability", "all" ]
+    container_name: lms-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: lms_grafana_secret
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - lms-network
+
+  loki:
+    image: grafana/loki:3.1.0
+    profiles: [ "observability", "all" ]
+    container_name: lms-loki
+    volumes:
+      - ../observability/loki/loki-config.yml:/etc/loki/config.yml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    networks:
+      - lms-network
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    profiles: [ "observability", "all" ]
+    container_name: lms-tempo
+    volumes:
+      - ../observability/tempo/tempo-config.yml:/etc/tempo/config.yml
+      - tempo-data:/tmp/tempo
+    command: [ "-config.file=/etc/tempo/config.yml" ]
+    ports:
+      - "3200:3200"   # Tempo API
+      - "4318:4318"   # OTLP HTTP
+      - "4317:4317"   # OTLP gRPC
+    networks:
+      - lms-network
