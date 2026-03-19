@@ -161,6 +161,7 @@ public class RouteConfig {
         return new org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter(50, 100, 1);
     }
 
+    @Primary
     @Bean
     public org.springframework.cloud.gateway.filter.ratelimit.KeyResolver ipKeyResolver() {
         return exchange -> reactor.core.publisher.Mono.justOrEmpty(
