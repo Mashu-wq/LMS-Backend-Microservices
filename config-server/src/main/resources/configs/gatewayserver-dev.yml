@@ -1,0 +1,13 @@
+# ============================================================
+# GATEWAY — DEV PROFILE overrides
+# ============================================================
+# auth-service runs on localhost:9000 when started locally in IntelliJ.
+# The JWKS endpoint must point there instead of the Docker hostname.
+# ============================================================
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/auth/v1/.well-known/jwks.json

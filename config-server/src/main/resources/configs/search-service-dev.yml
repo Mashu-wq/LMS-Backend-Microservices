@@ -1,0 +1,7 @@
+# ============================================================
+# SEARCH SERVICE — DEV PROFILE overrides
+# ============================================================
+spring:
+  data:
+    mongodb:
+      uri: mongodb://lms_user:lms_password@localhost:27017/lms_search?authSource=admin

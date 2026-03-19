@@ -32,7 +32,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eurekaserver:8761/eureka/
+      defaultZone: http://eureka-admin:eureka-secret@${EUREKA_HOST:eurekaserver}:8761/eureka/
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10
@@ -44,3 +44,19 @@ feign:
       default:
         connect-timeout: 3000
         read-timeout: 5000
+
+# Override global resilience4j defaults to include Feign exceptions
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+  retry:
+    configs:
+      default:
+        retry-exceptions:
+          - java.io.IOException
+          - feign.RetryableException

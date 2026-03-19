@@ -1,0 +1,6 @@
+# ============================================================
+# PAYMENT SERVICE — DEV PROFILE overrides
+# ============================================================
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms_payments

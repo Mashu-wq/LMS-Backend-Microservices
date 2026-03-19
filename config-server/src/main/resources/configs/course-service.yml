@@ -10,7 +10,7 @@ spring:
       auto-index-creation: false  # Managed via InitializingBean for production control
 
   # Redis for caching course catalog
-  data:
+
     redis:
       host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
@@ -34,7 +34,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eurekaserver:8761/eureka/
+      defaultZone: http://eureka-admin:eureka-secret@${EUREKA_HOST:eurekaserver}:8761/eureka/
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10

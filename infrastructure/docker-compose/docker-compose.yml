@@ -151,9 +151,11 @@ services:
       context: ../../eurekaserver
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       EUREKA_USERNAME: eureka-admin
       EUREKA_PASSWORD: eureka-secret
     ports:
@@ -177,9 +179,12 @@ services:
       context: ../../gatewayserver
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
+      AUTH_SERVICE_HOST: auth-service
       REDIS_HOST: redis
     ports:
       - "8080:8080"
@@ -203,9 +208,11 @@ services:
       context: ../../auth-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
@@ -226,9 +233,11 @@ services:
       context: ../../user-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
@@ -249,9 +258,11 @@ services:
       context: ../../course-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       MONGO_HOST: mongodb
       MONGO_USERNAME: lms_user
       MONGO_PASSWORD: lms_password
@@ -277,9 +288,11 @@ services:
       context: ../../progress-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
@@ -307,9 +320,11 @@ services:
       context: ../../payment-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
@@ -337,9 +352,11 @@ services:
       context: ../../notification-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USERNAME: lms_user
       RABBITMQ_PASSWORD: lms_password
@@ -360,9 +377,11 @@ services:
       context: ../../search-service
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       CONFIG_SERVER_HOST: config-server
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
+      EUREKA_HOST: eurekaserver
       MONGO_HOST: mongodb
       MONGO_USERNAME: lms_user
       MONGO_PASSWORD: lms_password
@@ -391,8 +410,8 @@ services:
     profiles: [ "observability", "all" ]
     container_name: lms-prometheus
     volumes:
-      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ../observability/prometheus/rules:/etc/prometheus/rules
+      - ../../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../../observability/prometheus/rules:/etc/prometheus/rules
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -415,8 +434,8 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ../observability/grafana/provisioning:/etc/grafana/provisioning
-      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards
+      - ../../observability/grafana/provisioning:/etc/grafana/provisioning
+      - ../../observability/grafana/dashboards:/var/lib/grafana/dashboards
     ports:
       - "3000:3000"
     depends_on:
@@ -429,7 +448,7 @@ services:
     profiles: [ "observability", "all" ]
     container_name: lms-loki
     volumes:
-      - ../observability/loki/loki-config.yml:/etc/loki/config.yml
+      - ../../observability/loki/loki-config.yml:/etc/loki/config.yml
       - loki-data:/loki
     command: -config.file=/etc/loki/config.yml
     ports:
@@ -442,7 +461,7 @@ services:
     profiles: [ "observability", "all" ]
     container_name: lms-tempo
     volumes:
-      - ../observability/tempo/tempo-config.yml:/etc/tempo/config.yml
+      - ../../observability/tempo/tempo-config.yml:/etc/tempo/config.yml
       - tempo-data:/tmp/tempo
     command: [ "-config.file=/etc/tempo/config.yml" ]
     ports:

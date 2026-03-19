@@ -7,13 +7,13 @@ spring:
 
 eureka:
   instance:
-    hostname: eurekaserver
+    hostname: ${EUREKA_HOST:eurekaserver}
   client:
     # Eureka server does not register itself
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      defaultZone: http://eurekaserver:8761/eureka/
+      defaultZone: http://${EUREKA_HOST:eurekaserver}:8761/eureka/
   server:
     # Disable self-preservation in dev (enable in production)
     enable-self-preservation: false

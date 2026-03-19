@@ -43,6 +43,12 @@ eureka:
 # Resilience4j — circuit breaker for Feign call to course-service
 resilience4j:
   circuitbreaker:
+    configs:
+      default:
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
     instances:
       course-service:
         sliding-window-size: 10
@@ -51,3 +57,9 @@ resilience4j:
         wait-duration-in-open-state: 30s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    configs:
+      default:
+        retry-exceptions:
+          - java.io.IOException
+          - feign.RetryableException

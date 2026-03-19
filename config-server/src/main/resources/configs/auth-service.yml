@@ -29,7 +29,7 @@ jwt:
 eureka:
   client:
     service-url:
-      defaultZone: http://eurekaserver:8761/eureka/
+      defaultZone: http://eureka-admin:eureka-secret@${EUREKA_HOST:eurekaserver}:8761/eureka/
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10

@@ -34,12 +34,12 @@ spring:
       resourceserver:
         jwt:
           # Gateway validates tokens using auth-service's public JWKS endpoint
-          jwk-set-uri: http://auth-service:9000/auth/v1/.well-known/jwks.json
+          jwk-set-uri: http://${AUTH_SERVICE_HOST:auth-service}:9000/auth/v1/.well-known/jwks.json
 
 eureka:
   client:
     service-url:
-      defaultZone: http://eurekaserver:8761/eureka/
+      defaultZone: http://eureka-admin:eureka-secret@${EUREKA_HOST:eurekaserver}:8761/eureka/
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10

@@ -45,6 +45,12 @@ notification:
 # Resilience4j — circuit breakers for Feign calls to user/course services
 resilience4j:
   circuitbreaker:
+    configs:
+      default:
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
     instances:
       user-service:
         sliding-window-size: 10
@@ -58,3 +64,9 @@ resilience4j:
         wait-duration-in-open-state: 20s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    configs:
+      default:
+        retry-exceptions:
+          - java.io.IOException
+          - feign.RetryableException
