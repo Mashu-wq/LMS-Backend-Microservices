@@ -4,6 +4,7 @@ import com.lms.authservice.application.dto.request.LoginRequest;
 import com.lms.authservice.application.dto.request.RefreshTokenRequest;
 import com.lms.authservice.application.dto.request.RegisterRequest;
 import com.lms.authservice.application.dto.response.AuthResponse;
+import com.lms.authservice.application.dto.response.LoginResult;
 import com.lms.authservice.application.dto.response.RegisterResponse;
 import com.lms.authservice.application.port.EventPublisher;
 import com.lms.authservice.application.port.PasswordEncoder;
@@ -144,7 +145,7 @@ public class AuthApplicationService {
 
     // ── Use Case: Login ──────────────────────────────────────
 
-    public AuthResponse login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         log.info("Login attempt for email={}", request.email());
 
         User user = userRepository.findByEmail(request.email())
@@ -190,18 +191,19 @@ public class AuthApplicationService {
         loginSuccessCounter.increment();
         log.info("Login successful userId={}", user.getId());
 
-        return AuthResponse.of(
+        AuthResponse authResponse = AuthResponse.of(
                 accessToken,
                 tokenService.accessTokenExpiresInSeconds(),
                 user.getId(),
                 user.getEmail(),
                 user.getRole().name()
         );
+        return new LoginResult(authResponse, rawRefreshToken);
     }
 
     // ── Use Case: Refresh Token ──────────────────────────────
 
-    public AuthResponse refresh(RefreshTokenRequest request) {
+    public LoginResult refresh(RefreshTokenRequest request) {
         String tokenHash = hashToken(request.refreshToken());
 
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
@@ -236,13 +238,14 @@ public class AuthApplicationService {
 
         log.info("Token refreshed for userId={}", user.getId());
 
-        return AuthResponse.of(
+        AuthResponse authResponse = AuthResponse.of(
                 newAccessToken,
                 tokenService.accessTokenExpiresInSeconds(),
                 user.getId(),
                 user.getEmail(),
                 user.getRole().name()
         );
+        return new LoginResult(authResponse, newRawRefreshToken);
     }
 
     // ── Use Case: Logout ─────────────────────────────────────

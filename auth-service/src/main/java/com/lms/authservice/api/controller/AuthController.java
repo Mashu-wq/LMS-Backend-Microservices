@@ -4,6 +4,7 @@ import com.lms.authservice.application.dto.request.LoginRequest;
 import com.lms.authservice.application.dto.request.RefreshTokenRequest;
 import com.lms.authservice.application.dto.request.RegisterRequest;
 import com.lms.authservice.application.dto.response.AuthResponse;
+import com.lms.authservice.application.dto.response.LoginResult;
 import com.lms.authservice.application.dto.response.RegisterResponse;
 import com.lms.authservice.application.service.AuthApplicationService;
 import jakarta.servlet.http.Cookie;
@@ -48,15 +49,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                                HttpServletResponse response) {
-        AuthResponse authResponse = authService.login(request);
-
-        // The service returns the raw refresh token via a temporary holder.
-        // In a real impl, we'd return it separately. For clarity here,
-        // we trust the service to generate it and set cookie on response.
-        // See note: in production use a dedicated login result object
-        // that carries the raw refresh token separately from the AuthResponse.
-
-        return ResponseEntity.ok(authResponse);
+        LoginResult result = authService.login(request);
+        setRefreshTokenCookie(response, result.rawRefreshToken());
+        return ResponseEntity.ok(result.authResponse());
     }
 
     @PostMapping("/refresh")
@@ -64,12 +59,12 @@ public class AuthController {
                                                  HttpServletResponse response) {
         String refreshToken = extractRefreshTokenFromCookie(request);
         if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
-        AuthResponse authResponse = authService.refresh(new RefreshTokenRequest(refreshToken));
-        return ResponseEntity.ok(authResponse);
+        LoginResult result = authService.refresh(new RefreshTokenRequest(refreshToken));
+        setRefreshTokenCookie(response, result.rawRefreshToken());
+        return ResponseEntity.ok(result.authResponse());
     }
 
     @PostMapping("/logout")

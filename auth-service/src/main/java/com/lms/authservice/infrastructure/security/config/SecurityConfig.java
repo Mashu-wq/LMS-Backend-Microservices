@@ -1,7 +1,7 @@
 package com.lms.authservice.infrastructure.security.config;
 
 import com.lms.authservice.application.port.PasswordEncoder;
-import org.springframework.beans.factory.annotation.Value;
+import com.lms.authservice.infrastructure.security.jwt.RsaKeyProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -31,11 +31,11 @@ import java.util.Base64;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${jwt.rsa.private-key:}")
-    private String privateKeyPem;
+    private final RsaKeyProperties rsaKeyProperties;
 
-    @Value("${jwt.rsa.public-key:}")
-    private String publicKeyPem;
+    public SecurityConfig(RsaKeyProperties rsaKeyProperties) {
+        this.rsaKeyProperties = rsaKeyProperties;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -47,6 +47,7 @@ public class SecurityConfig {
                     "/auth/v1/register",
                     "/auth/v1/login",
                     "/auth/v1/refresh",
+                    "/auth/v1/logout",
                     "/auth/v1/.well-known/**",
                     "/actuator/health",
                     "/actuator/info",
@@ -68,7 +69,7 @@ public class SecurityConfig {
      */
     @Bean
     public KeyPair rsaKeyPair() throws NoSuchAlgorithmException {
-        if (privateKeyPem != null && !privateKeyPem.isBlank()) {
+        if (rsaKeyProperties.privateKey() != null && !rsaKeyProperties.privateKey().isBlank()) {
             return loadKeyPairFromPem();
         }
         // Auto-generate for local development
@@ -79,8 +80,8 @@ public class SecurityConfig {
 
     private KeyPair loadKeyPairFromPem() {
         try {
-            byte[] privateBytes = Base64.getDecoder().decode(sanitizePem(privateKeyPem));
-            byte[] publicBytes = Base64.getDecoder().decode(sanitizePem(publicKeyPem));
+            byte[] privateBytes = Base64.getDecoder().decode(sanitizePem(rsaKeyProperties.privateKey()));
+            byte[] publicBytes = Base64.getDecoder().decode(sanitizePem(rsaKeyProperties.publicKey()));
 
             java.security.KeyFactory kf = java.security.KeyFactory.getInstance("RSA");
             RSAPrivateKey privateKey = (RSAPrivateKey) kf.generatePrivate(

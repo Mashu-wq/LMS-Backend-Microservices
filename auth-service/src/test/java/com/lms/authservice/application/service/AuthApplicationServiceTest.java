@@ -1,14 +1,17 @@
 package com.lms.authservice.application.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lms.authservice.application.dto.request.LoginRequest;
 import com.lms.authservice.application.dto.request.RegisterRequest;
-import com.lms.authservice.application.dto.response.AuthResponse;
+import com.lms.authservice.application.dto.response.LoginResult;
 import com.lms.authservice.application.dto.response.RegisterResponse;
 import com.lms.authservice.application.port.EventPublisher;
 import com.lms.authservice.application.port.PasswordEncoder;
 import com.lms.authservice.application.port.TokenService;
 import com.lms.authservice.domain.model.Role;
 import com.lms.authservice.domain.model.User;
+import com.lms.authservice.domain.repository.OutboxRepository;
 import com.lms.authservice.domain.repository.RefreshTokenRepository;
 import com.lms.authservice.domain.repository.UserRepository;
 import com.lms.authservice.infrastructure.security.exception.InvalidCredentialsException;
@@ -39,6 +42,7 @@ class AuthApplicationServiceTest {
     @Mock private TokenService tokenService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private EventPublisher eventPublisher;
+    @Mock private OutboxRepository outboxRepository;
 
     private AuthApplicationService authService;
 
@@ -46,7 +50,8 @@ class AuthApplicationServiceTest {
     void setUp() {
         authService = new AuthApplicationService(
                 userRepository, refreshTokenRepository, tokenService,
-                passwordEncoder, eventPublisher, new SimpleMeterRegistry()
+                passwordEncoder, eventPublisher, outboxRepository,
+                new ObjectMapper().registerModule(new JavaTimeModule()), new SimpleMeterRegistry()
         );
     }
 
@@ -64,6 +69,7 @@ class AuthApplicationServiceTest {
             when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
             when(passwordEncoder.encode("Password123!")).thenReturn("hashed");
             when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(outboxRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             // when
             RegisterResponse response = authService.register(request);
@@ -71,7 +77,7 @@ class AuthApplicationServiceTest {
             // then
             assertThat(response.email()).isEqualTo("john@example.com");
             assertThat(response.role()).isEqualTo("STUDENT");
-            verify(eventPublisher).publishUserRegistered(any());
+            verify(outboxRepository).save(any());
         }
 
         @Test
@@ -112,12 +118,12 @@ class AuthApplicationServiceTest {
             when(refreshTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             // when
-            AuthResponse response = authService.login(request);
+            LoginResult result = authService.login(request);
 
             // then
-            assertThat(response.accessToken()).isEqualTo("access-token");
-            assertThat(response.tokenType()).isEqualTo("Bearer");
-            assertThat(response.email()).isEqualTo("john@example.com");
+            assertThat(result.authResponse().accessToken()).isEqualTo("access-token");
+            assertThat(result.authResponse().tokenType()).isEqualTo("Bearer");
+            assertThat(result.authResponse().email()).isEqualTo("john@example.com");
         }
 
         @Test

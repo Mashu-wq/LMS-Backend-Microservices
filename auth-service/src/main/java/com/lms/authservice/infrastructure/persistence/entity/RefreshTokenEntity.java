@@ -45,6 +45,18 @@ public class RefreshTokenEntity {
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
+    @Column(name = "device_name")
+    private String deviceName;
+
+    @Column(name = "ip_address")
+    private String ipAddress;
+
+    @Column(name = "user_agent")
+    private String userAgent;
+
+    @Column(name = "last_used_at")
+    private Instant lastUsedAt;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
