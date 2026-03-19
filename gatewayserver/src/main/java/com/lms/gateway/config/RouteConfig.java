@@ -5,6 +5,7 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.time.Duration;
 
@@ -147,6 +148,7 @@ public class RouteConfig {
             .build();
     }
 
+    @Primary
     @Bean
     public org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter redisRateLimiter() {
         // 20 requests per second, burst up to 40
