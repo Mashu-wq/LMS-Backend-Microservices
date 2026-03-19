@@ -216,14 +216,25 @@ services:
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
       JWT_SECRET: ${JWT_SECRET:-bXlTdXBlclNlY3JldEtleUZvckxNU1BsYXRmb3JtMjAyNA==}
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
     networks:
       - lms-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://localhost:9000/actuator/health | grep -q 'UP' || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   user-service:
     image: zer008/user-service:latest
@@ -238,14 +249,24 @@ services:
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
       EUREKA_HOST: eurekaserver
+      AUTH_SERVICE_HOST: auth-service
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
       REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: lms_user
+      RABBITMQ_PASSWORD: lms_password
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       eurekaserver:
+        condition: service_healthy
+      auth-service:
         condition: service_healthy
     networks:
       - lms-network
@@ -263,6 +284,7 @@ services:
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
       EUREKA_HOST: eurekaserver
+      AUTH_SERVICE_HOST: auth-service
       MONGO_HOST: mongodb
       MONGO_USERNAME: lms_user
       MONGO_PASSWORD: lms_password
@@ -276,6 +298,8 @@ services:
       eurekaserver:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      auth-service:
         condition: service_healthy
     networks:
       - lms-network
@@ -325,6 +349,7 @@ services:
       CONFIG_SERVER_USERNAME: config-admin
       CONFIG_SERVER_PASSWORD: config-secret
       EUREKA_HOST: eurekaserver
+      AUTH_SERVICE_HOST: auth-service
       DB_HOST: postgres
       DB_USERNAME: lms_user
       DB_PASSWORD: lms_password
@@ -340,6 +365,8 @@ services:
       eurekaserver:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      auth-service:
         condition: service_healthy
     networks:
       - lms-network

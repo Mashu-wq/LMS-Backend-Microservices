@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"E:\\\\MyProject\\\\LMS-microservice\\\\course-service\\\\src\\\\main\\\\java\\\\com\\\\lms\\\\courseservice\" -type f -name \"*Event*\" -o -name \"*Repository*\" | grep -E \"\\\\.java$\")",
+      "Bash(docker compose:*)",
+      "Bash(mvn clean:*)",
+      "Bash(curl -s -u config-admin:config-secret http://localhost:8888/auth-service/docker)",
+      "Bash(docker ps:*)",
+      "Bash(mvn test:*)",
+      "Bash(docker network:*)",
+      "Bash(curl -s -X POST http://localhost:8080/auth/v1/register -H \"Content-Type: application/json\" -d '{\"\"\"\"firstName\"\"\"\":\"\"\"\"Test\"\"\"\",\"\"\"\"lastName\"\"\"\":\"\"\"\"Fix\"\"\"\",\"\"\"\"email\"\"\"\":\"\"\"\"testfix@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Password123!\"\"\"\",\"\"\"\"role\"\"\"\":\"\"\"\"STUDENT\"\"\"\"}')",
+      "Bash(python -m json.tool)"
+    ]
+  }
+}

@@ -15,5 +15,5 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
     GRANT ALL PRIVILEGES ON DATABASE lms_progress TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE lms_payments TO $POSTGRES_USER;
 EOSQL
-
 echo "PostgreSQL databases created successfully"
+

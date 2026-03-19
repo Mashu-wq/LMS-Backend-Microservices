@@ -28,6 +28,9 @@ management:
     health:
       show-details: always
       show-components: always
+  health:
+    eureka:
+      enabled: false  # Eureka registration status must not affect service health — monitored via Eureka dashboard
   metrics:
     tags:
       application: ${spring.application.name}

@@ -28,6 +28,16 @@ spring:
     type: redis
     redis:
       time-to-live: 600000  # 10 minutes
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:lms_user}
+    password: ${RABBITMQ_PASSWORD:lms_password}
+    virtual-host: /lms
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 5
 
 eureka:
   client:
