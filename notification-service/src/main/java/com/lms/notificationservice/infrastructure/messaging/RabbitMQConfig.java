@@ -5,6 +5,7 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.Jackson2JavaTypeMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -121,7 +122,12 @@ public class RabbitMQConfig {
 
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+        // Use the listener method's parameter type for deserialization rather than the
+        // __TypeId__ header. Required because auth-service's OutboxPublisher sends raw JSON
+        // bytes without a __TypeId__ header to avoid double-serialization.
+        converter.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.INFERRED);
+        return converter;
     }
 
     @Bean

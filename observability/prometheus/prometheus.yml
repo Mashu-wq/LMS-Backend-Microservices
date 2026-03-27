@@ -21,15 +21,21 @@ scrape_configs:
     static_configs:
       - targets: [ "localhost:9090" ]
 
-  # Config Server
+  # Config Server — protected by HTTP Basic auth
   - job_name: config-server
     metrics_path: /actuator/prometheus
+    basic_auth:
+      username: config-admin
+      password: config-secret
     static_configs:
       - targets: [ "config-server:8888" ]
 
-  # Eureka Server
+  # Eureka Server — protected by HTTP Basic auth
   - job_name: eurekaserver
     metrics_path: /actuator/prometheus
+    basic_auth:
+      username: eureka-admin
+      password: eureka-secret
     static_configs:
       - targets: [ "eurekaserver:8761" ]
 

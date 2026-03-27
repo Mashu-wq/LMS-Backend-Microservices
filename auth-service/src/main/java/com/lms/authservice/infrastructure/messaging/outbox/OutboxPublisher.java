@@ -3,7 +3,7 @@ package com.lms.authservice.infrastructure.messaging.outbox;
 import com.lms.authservice.domain.model.OutboxEvent;
 import com.lms.authservice.domain.repository.OutboxRepository;
 import com.lms.authservice.infrastructure.messaging.RabbitMQConfig;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;

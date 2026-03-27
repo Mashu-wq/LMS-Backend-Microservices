@@ -544,3 +544,8 @@ docker compose --profile services up -d auth-service
 | Prometheus | http://localhost:9090 | — |
 | MailHog | http://localhost:8025 | — |
 | Eureka | http://localhost:8761 | `eureka-admin` / `eureka-secret` |
+
+
+![img_3.png](img_3.png)
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)

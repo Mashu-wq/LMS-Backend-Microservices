@@ -6,7 +6,6 @@ import com.lms.authservice.application.dto.request.RegisterRequest;
 import com.lms.authservice.application.dto.response.AuthResponse;
 import com.lms.authservice.application.dto.response.LoginResult;
 import com.lms.authservice.application.dto.response.RegisterResponse;
-import com.lms.authservice.application.port.EventPublisher;
 import com.lms.authservice.application.port.PasswordEncoder;
 import com.lms.authservice.application.port.TokenService;
 import com.lms.authservice.domain.event.UserRegisteredEvent;
@@ -52,7 +51,6 @@ public class AuthApplicationService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
-    private final EventPublisher eventPublisher;
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
@@ -61,11 +59,10 @@ public class AuthApplicationService {
     private final Counter loginSuccessCounter;
     private final Counter loginFailureCounter;
 
-    public AuthApplicationService( UserRepository userRepository,
+    public AuthApplicationService(UserRepository userRepository,
                                    RefreshTokenRepository refreshTokenRepository,
                                    TokenService tokenService,
                                    PasswordEncoder passwordEncoder,
-                                   EventPublisher eventPublisher,
                                    OutboxRepository outboxRepository,
                                    ObjectMapper objectMapper,
                                    MeterRegistry meterRegistry) {
@@ -73,7 +70,6 @@ public class AuthApplicationService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
-        this.eventPublisher = eventPublisher;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
 

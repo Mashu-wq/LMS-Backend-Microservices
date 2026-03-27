@@ -6,7 +6,6 @@ import com.lms.authservice.application.dto.request.LoginRequest;
 import com.lms.authservice.application.dto.request.RegisterRequest;
 import com.lms.authservice.application.dto.response.LoginResult;
 import com.lms.authservice.application.dto.response.RegisterResponse;
-import com.lms.authservice.application.port.EventPublisher;
 import com.lms.authservice.application.port.PasswordEncoder;
 import com.lms.authservice.application.port.TokenService;
 import com.lms.authservice.domain.model.Role;
@@ -41,7 +40,6 @@ class AuthApplicationServiceTest {
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private TokenService tokenService;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private EventPublisher eventPublisher;
     @Mock private OutboxRepository outboxRepository;
 
     private AuthApplicationService authService;
@@ -50,7 +48,7 @@ class AuthApplicationServiceTest {
     void setUp() {
         authService = new AuthApplicationService(
                 userRepository, refreshTokenRepository, tokenService,
-                passwordEncoder, eventPublisher, outboxRepository,
+                passwordEncoder, outboxRepository,
                 new ObjectMapper().registerModule(new JavaTimeModule()), new SimpleMeterRegistry()
         );
     }
@@ -94,7 +92,7 @@ class AuthApplicationServiceTest {
                     .hasMessageContaining("jane@example.com");
 
             verify(userRepository, never()).save(any());
-            verifyNoInteractions(eventPublisher);
+            verifyNoInteractions(outboxRepository);
         }
     }
 

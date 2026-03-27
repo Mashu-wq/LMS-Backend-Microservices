@@ -9,7 +9,8 @@
       "Bash(mvn test:*)",
       "Bash(docker network:*)",
       "Bash(curl -s -X POST http://localhost:8080/auth/v1/register -H \"Content-Type: application/json\" -d '{\"\"\"\"firstName\"\"\"\":\"\"\"\"Test\"\"\"\",\"\"\"\"lastName\"\"\"\":\"\"\"\"Fix\"\"\"\",\"\"\"\"email\"\"\"\":\"\"\"\"testfix@example.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Password123!\"\"\"\",\"\"\"\"role\"\"\"\":\"\"\"\"STUDENT\"\"\"\"}')",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(find E:/MyProject/LMS-microservice/gatewayserver -name *.java)"
     ]
   }
 }
