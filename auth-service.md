@@ -546,6 +546,4 @@ docker compose --profile services up -d auth-service
 | Eureka | http://localhost:8761 | `eureka-admin` / `eureka-secret` |
 
 
-![img_3.png](img_3.png)
-![img_1.png](img_1.png)
-![img_2.png](img_2.png)
+![rate_limiting & observability_stack](images/rate_limit_1.png)
