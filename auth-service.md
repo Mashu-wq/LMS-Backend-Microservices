@@ -22,6 +22,18 @@ The authentication and authorization microservice for the LMS Platform. Responsi
 9. [Observability](#observability)
 10. [Running Locally](#running-locally)
 
+## Some screenshot of observability stack 
+![rate_limiting & observability_stack](images/rate_limit_1.png)
+![rate_limiting & observability_stack](images/rate_limit_2.png)
+![rate_limiting & observability_stack](images/rate_limit_3.png)
+![rate_limiting & observability_stack](images/rate_limit_4.png)
+![rate_limiting & observability_stack](images/rate_limit_5.png)
+![rate_limiting & observability_stack](images/rate_limit_6.png)
+![rate_limiting & observability_stack](images/rate_limit_7.png)
+![rate_limiting & observability_stack](images/img_1.png)
+![rate_limiting & observability_stack](images/img_2.png)
+![rate_limiting & observability_stack](images/img_3.png)
+
 ---
 
 ## API Endpoints
